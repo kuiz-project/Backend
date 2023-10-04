@@ -1,0 +1,43 @@
+spring:
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/kuiz?serverTimeZone=Asia/Seoul
+    username: user1
+    password: andy8429!
+
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      use-new-id-generator-mappings: false
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
+
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+cloud:
+  aws:
+    s3:
+      bucket: kuiz.konkuk
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
+    credentials:
+      access-key: AKIAUAB66BRCTNJ7D64V
+      secret-key: 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
