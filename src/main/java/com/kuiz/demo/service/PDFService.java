@@ -97,7 +97,7 @@ public class PDFService {
             throw new RuntimeException("Error serializing createQuestionDto", e);
         }
 
-        String pythonPath = "~/python/keyword.py";
+        String pythonPath = "/home/master/python/get_keyword.py";
 
         String pythonOutput = executePythonScript(pythonPath, jsonString);
 
