@@ -73,7 +73,7 @@ public class TestService {
         }
 
         //파이썬 코드 실행 (인자는 keywordarray, 객관식, 주관식 갯수,subject)
-        String pythonPath = "/path/to/your/script.py";
+        String pythonPath = "/home/master/python/get_test.py";
 
         String pythonOutput = executePythonScript(pythonPath, jsonString);
         QuestionData questionData;

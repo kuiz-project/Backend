@@ -71,9 +71,6 @@ public class PDFService {
                 .build();
         PDF savedPdf = pdfRepository.save(pdf);
 
-        // 데이터베이스 저장 후 S3에 파일 업로드
-        String fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
-
         // PDF 파일을 임시 파일로 저장
         File tempFile = null;
         try {
@@ -110,6 +107,8 @@ public class PDFService {
 
         Keywords keywords = new Keywords();
         keywords.setPageKeywords(tempResult);
+        // 데이터베이스 저장 후 S3에 파일 업로드
+        String fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
 
         savedPdf.setFile_url(fileUrl);
         savedPdf.setKeywords(keywords);
