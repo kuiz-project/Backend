@@ -11,7 +11,7 @@ import java.util.Optional;
 public class PdfResponseDto {
     private Integer pdf_id;
     private String file_name;
-    private String subject;
+    private Enum subject;
 
 
     public PdfResponseDto(PDF pdf) {

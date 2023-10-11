@@ -2,22 +2,26 @@ package com.kuiz.demo.service;
 
 import com.kuiz.demo.Dto.*;
 import com.kuiz.demo.exception.SomethingException;
-import com.kuiz.demo.model.Folder;
-import com.kuiz.demo.model.PDF;
-import com.kuiz.demo.model.User;
+import com.kuiz.demo.model.*;
 import com.kuiz.demo.repository.FolderRepository;
 import com.kuiz.demo.repository.PDFRepository;
 import com.kuiz.demo.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class PDFService {
@@ -34,8 +38,9 @@ public class PDFService {
     @Autowired
     private S3Uploader s3Uploader;
 
+
     @Transactional
-    public ResponseEntity<?> uploadPDF(MultipartFile multipartFile, String subject, Integer user_code) {
+    public ResponseEntity<?> uploadPDF(MultipartFile multipartFile, Subject subject, Integer user_code) {
         Optional<User> tempUser = findUser(user_code);
         if (!tempUser.isPresent()){
             throw new SomethingException("잘못된 접근입니다.");
@@ -70,19 +75,43 @@ public class PDFService {
 
         // 데이터베이스 저장 후 S3에 파일 업로드
         String fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
+
+        //keyword 추출하는 작업 추가
+        String objectKey = s3Uploader.extractS3KeyFromUrl(pdf.getFile_url());
+        String presignedUrl = s3Uploader.getPresignedUrl(objectKey, 30).toString();
+
+        CreateKeywordsDto createKeywordsDto = new CreateKeywordsDto();
+        createKeywordsDto.setPdf_url(presignedUrl.toString());
+        createKeywordsDto.setSubject(subject);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString;
+        try {
+            jsonString = objectMapper.writeValueAsString(createKeywordsDto);
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializing createQuestionDto", e);
+        }
+
+        String pythonPath = "/path/to/your/script.py";
+
+        String pythonOutput = executePythonScript(pythonPath, jsonString);
+
+        Map<String, List<String>> tempResult;
+        try {
+            tempResult = objectMapper.readValue(pythonOutput, new TypeReference<Map<String, List<String>>>() {});
+        } catch (Exception e) {
+            throw new RuntimeException("파이썬 키워드 추출 후 error",e);
+        }
+
+        Keywords keywords = new Keywords();
+        keywords.setPageKeywords(tempResult);
+
         savedPdf.setFile_url(fileUrl);
-        pdfRepository.save(savedPdf);  // URL 정보를 다시 저장
-
-        // 반환을 위한 DTO 설정
-        PdfUploadResponseDto responseDto = new PdfUploadResponseDto();
-        responseDto.setUser_code(currentUser.getUser_code());
-        responseDto.setPdf(new PdfResponseDto(savedPdf));
-
-
-        //keyword 추출하는 작업 추가예정
-
-
-        return ResponseEntity.ok(responseDto);
+        savedPdf.setKeywords(keywords);
+        pdfRepository.save(savedPdf);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "PDF가 성공적으로 업로드되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
 
@@ -219,4 +248,37 @@ public class PDFService {
         return userRepository.findById(user_code);
     }
 
+    public String executePythonScript(String pythonScriptPath, String Input) {
+        ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScriptPath);
+        processBuilder.redirectErrorStream(true);
+
+        StringBuilder output = new StringBuilder();
+
+        try {
+            Process process = processBuilder.start();
+
+            // 입력을 파이썬 스크립트에 제공
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            writer.write(Input);
+            writer.flush();
+            writer.close();
+
+            // 파이썬 스크립트의 출력을 받기
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
+                output.append("\n");
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("Python script exited with code: " + exitCode);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error executing python script", e);
+        }
+
+        return output.toString().trim();  // 파이썬 스크립트에서 반환된 결과
+    }
 }

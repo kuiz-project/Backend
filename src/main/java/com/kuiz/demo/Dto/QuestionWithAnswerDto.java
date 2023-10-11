@@ -2,12 +2,15 @@ package com.kuiz.demo.Dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class QuestionWithAnswerDto {
-    private Integer question_id;  //?
+    private String type;
     private String question;
-    private String my_answer;
+    private List<String> choices;
     private String answer;
-    private String explan;
-    private boolean correct=false;
+    private String explanation;
+    private String user_answer;
+    private boolean correct;
 }

@@ -1,6 +1,6 @@
 package com.kuiz.demo.Controller;
 
-import com.kuiz.demo.Dto.CreateTestDto;
+import com.kuiz.demo.Dto.CreateTestRequireDto;
 import com.kuiz.demo.service.TestService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +20,14 @@ public class TestController {
     private TestService testService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createTest(@RequestBody CreateTestDto createTestDto, HttpSession httpSession) {
+    public ResponseEntity<?> createTest(@RequestBody CreateTestRequireDto createTestRequireDto, HttpSession httpSession) {
         Integer user_code = (Integer) httpSession.getAttribute("user");
         if (user_code == null) {
             Map<String, String> responseMessage = new HashMap<>();
             responseMessage.put("error", "로그인하지 않았습니다.");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseMessage);
         }
-        return testService.createTest(createTestDto,user_code);
+        return testService.createTest(createTestRequireDto,user_code);
     }
 
     @GetMapping("/gettest/{testId}")

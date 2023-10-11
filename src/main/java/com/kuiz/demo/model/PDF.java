@@ -1,6 +1,8 @@
 package com.kuiz.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kuiz.demo.Converter.KeywordsConverter;
+import com.kuiz.demo.Converter.QuestionDataConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,10 +28,12 @@ public class PDF {
     private String file_name;
 
     @Column (nullable = false)
-    private String subject;
+    @Enumerated(EnumType.STRING)
+    private Subject subject;
 
     @Column(columnDefinition = "JSON")
-    private String keywords;
+    @Convert(converter = KeywordsConverter.class)
+    private Keywords keywords;
 
     @ManyToOne(fetch = FetchType.LAZY) //Many = Folder, One = User
     @JoinColumn(name="folder_id", referencedColumnName="folder_id")

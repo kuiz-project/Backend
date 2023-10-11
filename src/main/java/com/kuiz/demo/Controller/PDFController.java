@@ -2,6 +2,7 @@ package com.kuiz.demo.Controller;
 
 import com.kuiz.demo.Dto.UpdatePdfNameDto;
 import com.kuiz.demo.Dto.UpdatePdfSubjectDto;
+import com.kuiz.demo.model.Subject;
 import com.kuiz.demo.service.PDFService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.stream.Collectors;
 
 import java.util.*;
 
@@ -20,9 +22,20 @@ public class PDFController {
     @Autowired
     private PDFService pdfService;
 
+    @GetMapping("/subjects")
+    public ResponseEntity<?> getSubject() {
+        List<String> subjects = Arrays.stream(Subject.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        Map<String, List<String>> response = Map.of("subject", subjects);
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadPDF(@RequestParam("file") MultipartFile file,
-                                       @RequestParam("subject") String subject,
+                                       @RequestParam("subject") Subject subject,
                                        HttpSession session) {
         Integer currentUser = (Integer) session.getAttribute("user");
 

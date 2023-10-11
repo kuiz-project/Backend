@@ -1,5 +1,6 @@
 package com.kuiz.demo.model;
 
+import com.kuiz.demo.Converter.QuestionDataConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +32,8 @@ public class Test {
     private Integer N_multiple_choices;
 
     @Column(columnDefinition = "JSON")
-    private String questions;
+    @Convert(converter = QuestionDataConverter.class)
+    private QuestionData questionData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_code", referencedColumnName="user_code", nullable = false)
