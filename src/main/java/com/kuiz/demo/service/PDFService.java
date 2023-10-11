@@ -1,5 +1,7 @@
 package com.kuiz.demo.service;
 
+import java.io.*;
+
 import com.kuiz.demo.Dto.*;
 import com.kuiz.demo.exception.SomethingException;
 import com.kuiz.demo.model.*;
@@ -16,10 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.util.*;
 
@@ -76,12 +74,19 @@ public class PDFService {
         // 데이터베이스 저장 후 S3에 파일 업로드
         String fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
 
+        // PDF 파일을 임시 파일로 저장
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("uploadedPdf", ".pdf");
+            multipartFile.transferTo(tempFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         //keyword 추출하는 작업 추가
-        String objectKey = s3Uploader.extractS3KeyFromUrl(pdf.getFile_url());
-        String presignedUrl = s3Uploader.getPresignedUrl(objectKey, 30).toString();
 
         CreateKeywordsDto createKeywordsDto = new CreateKeywordsDto();
-        createKeywordsDto.setPdf_url(presignedUrl.toString());
+        createKeywordsDto.setPdf_url(tempFile.getAbsolutePath());
         createKeywordsDto.setSubject(subject);
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -92,7 +97,7 @@ public class PDFService {
             throw new RuntimeException("Error serializing createQuestionDto", e);
         }
 
-        String pythonPath = "/path/to/your/script.py";
+        String pythonPath = "~/python/keyword.py";
 
         String pythonOutput = executePythonScript(pythonPath, jsonString);
 
@@ -109,8 +114,15 @@ public class PDFService {
         savedPdf.setFile_url(fileUrl);
         savedPdf.setKeywords(keywords);
         pdfRepository.save(savedPdf);
+
+        // 파이썬 스크립트 실행 후 임시 파일 삭제
+        if(tempFile.exists()) {
+            tempFile.delete();
+        }
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "PDF가 성공적으로 업로드되었습니다.");
+        //response.put("message2", String.valueOf(keywords));
         return ResponseEntity.ok(response);
     }
 
@@ -249,7 +261,7 @@ public class PDFService {
     }
 
     public String executePythonScript(String pythonScriptPath, String Input) {
-        ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScriptPath);
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", pythonScriptPath);
         processBuilder.redirectErrorStream(true);
 
         StringBuilder output = new StringBuilder();

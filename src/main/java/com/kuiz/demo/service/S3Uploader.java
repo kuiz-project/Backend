@@ -97,6 +97,10 @@ public class S3Uploader {
     }
 
     public String extractS3KeyFromUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid or empty URL provided.");
+        }
+
         try {
             URL url = new URL(fileUrl);
             String path = url.getPath();
@@ -108,6 +112,7 @@ public class S3Uploader {
             throw new RuntimeException("Error decoding URL for S3 file.", e);
         }
     }
+
 
     public URL getPresignedUrl(String objectKey, int expirationTimeInMinutes) {
         Date expiration = new Date();

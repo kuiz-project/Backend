@@ -157,7 +157,7 @@ public class TestService {
     }
 
     public String executePythonScript(String pythonScriptPath, String jsonInput) {
-        ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScriptPath);
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", pythonScriptPath);
         processBuilder.redirectErrorStream(true);
 
         StringBuilder output = new StringBuilder();

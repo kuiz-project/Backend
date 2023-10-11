@@ -15,7 +15,7 @@ public class KeywordsConverter implements AttributeConverter<Keywords, String> {
     @Override
     public String convertToDatabaseColumn(Keywords keywords) {
         try {
-            return objectMapper.writeValueAsString(keywords.getPageKeywords());
+            return objectMapper.writeValueAsString(keywords);
         } catch (IOException e) {
             throw new RuntimeException("Failed to convert Keywords to JSON", e);
         }
