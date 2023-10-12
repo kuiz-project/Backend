@@ -26,10 +26,10 @@ public class Test {
     private String test_name;
 
     @Column (nullable = false)
-    private Integer multiple_choices=0;
+    private Integer multiple_choices;
 
     @Column (nullable = false)
-    private Integer N_multiple_choices=0;
+    private Integer N_multiple_choices;
 
     @Column (nullable = false)
     private String date;
