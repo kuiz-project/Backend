@@ -6,8 +6,7 @@ import com.kuiz.demo.Dto.*;
 import com.kuiz.demo.exception.SomethingException;
 import com.kuiz.demo.model.PDF;
 
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
@@ -23,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,15 +80,14 @@ public class TestService {
             throw new RuntimeException("파이썬코드 실행 이후 역직렬화 error",e);
         }
 
-
-
         Test test = Test.builder()
-                .test_name(getCurrentLocalTimeAsString()+currentPDF.getFile_name())
+                .test_name(currentPDF.getFile_name())
                 .multiple_choices(createTestRequireDto.getMultiple_choices())
                 .N_multiple_choices(createTestRequireDto.getN_multiple_choices())
                 .questionData(questionData)
                 .user(currentUser)
                 .pdf(currentPDF)
+                .date(getCurrentLocalTimeAsString())
                 .build();
 
          Test savedTest = testRepository.save(test);
@@ -156,43 +152,44 @@ public class TestService {
         return userRepository.findById(user_code);
     }
 
-    public String executePythonScript(String pythonScriptPath, String jsonInput) {
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", pythonScriptPath);
+    private String executePythonScript(String scriptPath, String jsonString) {
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptPath);
         processBuilder.redirectErrorStream(true);
-
         StringBuilder output = new StringBuilder();
 
         try {
             Process process = processBuilder.start();
+            try (
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
+            ) {
+                // jsonString을 파이프를 통해 전달
+                writer.write(jsonString);
+                writer.flush();
+                writer.close();
 
-            // 입력을 파이썬 스크립트에 제공
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-            writer.write(jsonInput);
-            writer.flush();
-            writer.close();
-
-            // 파이썬 스크립트의 출력을 받기
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-                output.append("\n");
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line);
+                    output.append("\n");
+                }
             }
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new RuntimeException("Python script exited with code: " + exitCode);
+                throw new RuntimeException("파이썬 스크립트가 다음 코드로 종료되었습니다: " + exitCode + " 출력:\n" + output.toString());
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error executing python script", e);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("파이썬 스크립트 실행 중 오류 발생", e);
         }
 
-        return output.toString().trim();  // 파이썬 스크립트에서 반환된 결과
+        return output.toString().trim();
+
     }
 
     public String getCurrentLocalTimeAsString() {
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd_HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         return now.format(formatter);
     }
 }
