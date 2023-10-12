@@ -31,6 +31,9 @@ public class Test {
     @Column (nullable = false)
     private Integer N_multiple_choices;
 
+    @Column (nullable = false)
+    private String date;
+
     @Column(columnDefinition = "JSON")
     @Convert(converter = QuestionDataConverter.class)
     private QuestionData questionData;

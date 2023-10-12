@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SomethingException.class)
     public ResponseEntity<Map<String, String>> handleAuthenticationException(SomethingException e) {
+        //logger.error("An error occurred: {}", e.getMessage(), e);
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);

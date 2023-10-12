@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -67,5 +69,16 @@ public class FolderController {
         return folderService.updateFolderName(updateFolderNameDto, user_code);
     }
 
+    @DeleteMapping("/delete/{folderId}")
+    public ResponseEntity<?> deleteFolder(@PathVariable Integer folderId, HttpSession httpSession) {
+        Integer user_code = (Integer) httpSession.getAttribute("user");
+        if (user_code == null) {
+            Map<String, String> responseMessage = new HashMap<>();
+            responseMessage.put("error", "로그인하지 않았습니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseMessage);
+        }
 
+        return folderService.deleteFolder(folderId, user_code);
+
+    }
 }

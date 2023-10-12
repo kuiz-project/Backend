@@ -36,6 +36,7 @@ public class PDFController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadPDF(@RequestParam("file") MultipartFile file,
                                        @RequestParam("subject") Subject subject,
+                                       @RequestParam("folder") Integer folder_id,
                                        HttpSession session) {
         Integer currentUser = (Integer) session.getAttribute("user");
 
@@ -43,7 +44,7 @@ public class PDFController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인하지 않았습니다.");
         }
 
-        return pdfService.uploadPDF(file, subject, currentUser);
+        return pdfService.uploadPDF(file, subject, folder_id, currentUser);
     }
 
     @DeleteMapping("/delete")

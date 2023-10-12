@@ -38,35 +38,26 @@ public class PDFService {
 
 
     @Transactional
-    public ResponseEntity<?> uploadPDF(MultipartFile multipartFile, Subject subject, Integer user_code) {
+    public ResponseEntity<?> uploadPDF(MultipartFile multipartFile, Subject subject,Integer folder_id, Integer user_code) {
         Optional<User> tempUser = findUser(user_code);
-        if (!tempUser.isPresent()){
+        if (tempUser.isEmpty()){
             throw new SomethingException("잘못된 접근입니다.");
         }
         User currentUser = tempUser.get();
 
-        Optional<Folder> tempDefaultFolder = currentUser.getFolders().stream()
-                .filter(folder -> folder.getFolder_name().equals("default"))
-                .findFirst();
+        Optional<Folder> tempfolder = folderRepository.findById(folder_id);
 
-        Folder defaultFolder;
+        if (tempfolder.isEmpty()){
+            throw new SomethingException("folder id의 폴더를 찾지 못함");
+        }
 
-        if (!tempDefaultFolder.isPresent()){
-            defaultFolder = Folder.builder()
-                    .folder_name("default")
-                    .user(currentUser)
-                    .build();
-            folderRepository.save(defaultFolder);
-        }
-        else{
-            defaultFolder = tempDefaultFolder.get();
-        }
+        Folder targetfolder = tempfolder.get();
 
         // 먼저 PDF 정보를 데이터베이스에 저장
         PDF pdf = PDF.builder()
                 .file_name(multipartFile.getOriginalFilename())
                 .subject(subject)
-                .folder(defaultFolder)
+                .folder(targetfolder)
                 .user(currentUser)
                 .build();
         PDF savedPdf = pdfRepository.save(pdf);
@@ -78,7 +69,6 @@ public class PDFService {
 
             savedPdf.setFile_url(fileUrl);
             // PDF 파일을 임시 파일로 저장
-            tempFile = null;
             try {
                 tempFile = File.createTempFile("uploadedPdf", ".pdf");
                 multipartFile.transferTo(tempFile);
@@ -122,11 +112,12 @@ public class PDFService {
                 tempFile.delete();
             }
 
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "PDF가 성공적으로 업로드되었습니다.");
+            PdfDto pdfDto = new PdfDto(savedPdf);
+
+            //Map<String, Object> response = new HashMap<>();
             //response.put("message2", String.valueOf(keywords));
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(pdfDto);
         } catch (RuntimeException e) {
             // 중간에 에러 발생 시, 업로드된 파일 삭제
             if (!fileUrl.isEmpty()) {
@@ -160,23 +151,27 @@ public class PDFService {
 
         UserPdfDto userPdfDto = new UserPdfDto(currentUser);
 
+        // First loop: Validate the PDFs
         for (Integer pdfId : pdfIds) {
             boolean PDFExists = userPdfDto.getPdf().stream()
                     .anyMatch(folderDto -> folderDto.getPdf_id().equals(pdfId));
             if (!PDFExists){
                 throw new SomethingException("권한이 없습니다. 관리자에게 문의해주세요.");
             }
+        }
+
+        // Second loop: Delete the PDFs
+        for (Integer pdfId : pdfIds) {
             Optional<PDF> pdfOptional = pdfRepository.findById(pdfId);
             if (pdfOptional.isPresent()) {
                 PDF pdf = pdfOptional.get();
+                s3Uploader.deleteS3(pdf.getFile_url());  // Consider moving this after repository deletion depending on your use case
                 pdfRepository.delete(pdf);
-                s3Uploader.deleteS3(pdf.getFile_url());
             }
         }
 
         response.put("message", "PDF가 성공적으로 삭제되었습니다.");
         return ResponseEntity.ok(response);
-
     }
 
 
