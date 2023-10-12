@@ -14,10 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.net.URL;
 import java.util.*;
 
@@ -71,60 +71,82 @@ public class PDFService {
                 .build();
         PDF savedPdf = pdfRepository.save(pdf);
 
-        // PDF 파일을 임시 파일로 저장
+        String fileUrl = "";
         File tempFile = null;
         try {
-            tempFile = File.createTempFile("uploadedPdf", ".pdf");
-            multipartFile.transferTo(tempFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
+
+            savedPdf.setFile_url(fileUrl);
+            // PDF 파일을 임시 파일로 저장
+            tempFile = null;
+            try {
+                tempFile = File.createTempFile("uploadedPdf", ".pdf");
+                multipartFile.transferTo(tempFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            //keyword 추출하는 작업 추가
+
+            CreateKeywordsDto createKeywordsDto = new CreateKeywordsDto();
+            createKeywordsDto.setPdf_url(tempFile.getAbsolutePath());
+            createKeywordsDto.setSubject(subject);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonString;
+            try {
+                jsonString = objectMapper.writeValueAsString(createKeywordsDto);
+            } catch (Exception e) {
+                throw new RuntimeException("Error serializing createQuestionDto", e);
+            }
+
+            String pythonPath = "/home/master/get_keyword.py";
+
+            String pythonOutput = executePythonScript(pythonPath, jsonString);
+
+            Map<String, List<String>> tempResult;
+            try {
+                tempResult = objectMapper.readValue(pythonOutput, new TypeReference<Map<String, List<String>>>() {});
+            } catch (Exception e) {
+                throw new RuntimeException("파이썬 키워드 추출 후 error",e);
+            }
+
+            Keywords keywords = new Keywords();
+            keywords.setPageKeywords(tempResult);
+
+            savedPdf.setKeywords(keywords);
+            pdfRepository.save(savedPdf);
+
+            // 파이썬 스크립트 실행 후 임시 파일 삭제
+            if(tempFile.exists()) {
+                tempFile.delete();
+            }
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "PDF가 성공적으로 업로드되었습니다.");
+            //response.put("message2", String.valueOf(keywords));
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            // 중간에 에러 발생 시, 업로드된 파일 삭제
+            if (!fileUrl.isEmpty()) {
+                s3Uploader.deleteS3(fileUrl);
+            }
+
+            // 에러 메시지 전달
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "파일 업로드 중 오류가 발생했습니다: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        } finally {
+            // 키워드 추출 후 임시 파일 삭제 로직
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
-
-        //keyword 추출하는 작업 추가
-
-        CreateKeywordsDto createKeywordsDto = new CreateKeywordsDto();
-        createKeywordsDto.setPdf_url(tempFile.getAbsolutePath());
-        createKeywordsDto.setSubject(subject);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString;
-        try {
-            jsonString = objectMapper.writeValueAsString(createKeywordsDto);
-        } catch (Exception e) {
-            throw new RuntimeException("Error serializing createQuestionDto", e);
-        }
-
-        String pythonPath = "/home/master/python/get_keyword.py";
-
-        String pythonOutput = executePythonScript(pythonPath, jsonString);
-
-        Map<String, List<String>> tempResult;
-        try {
-            tempResult = objectMapper.readValue(pythonOutput, new TypeReference<Map<String, List<String>>>() {});
-        } catch (Exception e) {
-            throw new RuntimeException("파이썬 키워드 추출 후 error",e);
-        }
-
-        Keywords keywords = new Keywords();
-        keywords.setPageKeywords(tempResult);
         // 데이터베이스 저장 후 S3에 파일 업로드
-        String fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
 
-        savedPdf.setFile_url(fileUrl);
-        savedPdf.setKeywords(keywords);
-        pdfRepository.save(savedPdf);
-
-        // 파이썬 스크립트 실행 후 임시 파일 삭제
-        if(tempFile.exists()) {
-            tempFile.delete();
-        }
-
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "PDF가 성공적으로 업로드되었습니다.");
-        //response.put("message2", String.valueOf(keywords));
-        return ResponseEntity.ok(response);
     }
-
 
     @Transactional
     public ResponseEntity<?> deletePDFs(List<Integer> pdfIds, Integer user_code) {
@@ -259,37 +281,38 @@ public class PDFService {
         return userRepository.findById(user_code);
     }
 
-    public String executePythonScript(String pythonScriptPath, String Input) {
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", pythonScriptPath);
+    private String executePythonScript(String scriptPath, String jsonString) {
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptPath);
         processBuilder.redirectErrorStream(true);
-
         StringBuilder output = new StringBuilder();
 
         try {
             Process process = processBuilder.start();
+            try (
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
+            ) {
+                // jsonString을 파이프를 통해 전달
+                writer.write(jsonString);
+                writer.flush();
+                writer.close();
 
-            // 입력을 파이썬 스크립트에 제공
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-            writer.write(Input);
-            writer.flush();
-            writer.close();
-
-            // 파이썬 스크립트의 출력을 받기
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-                output.append("\n");
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line);
+                    output.append("\n");
+                }
             }
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new RuntimeException("Python script exited with code: " + exitCode);
+                throw new RuntimeException("파이썬 스크립트가 다음 코드로 종료되었습니다: " + exitCode + " 출력:\n" + output.toString());
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error executing python script", e);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("파이썬 스크립트 실행 중 오류 발생", e);
         }
 
-        return output.toString().trim();  // 파이썬 스크립트에서 반환된 결과
+        return output.toString().trim();
+
     }
 }
