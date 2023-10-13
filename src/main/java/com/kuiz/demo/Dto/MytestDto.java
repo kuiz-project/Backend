@@ -6,7 +6,7 @@ import lombok.Data;
 public class MytestDto {
     private Integer test_id;
 
-    private String file_name;
+    private String folder_name;
     private String subject;
     private String test_name;
     private Integer page;

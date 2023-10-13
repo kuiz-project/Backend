@@ -173,12 +173,14 @@ public class TestController {
             mytestDto.setTest_name("test"+(i+1));
             mytestDto.setDate("2023.10."+(i+10));
             mytestDto.setSubject("과목"+(i+1));
-            mytestDto.setFile_name("파일"+(i+1));
+            mytestDto.setFolder_name("파일"+(i+1));
             mytestDto.setPage(i+15);
             tests.add(mytestDto);
         }
 
-        return ResponseEntity.ok(tests);
+        Map<String, Object> response =new HashMap<>();
+        response.put("tests",tests);
+        return ResponseEntity.ok(response);
     }
 
 }
