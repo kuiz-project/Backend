@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequestMapping("/api/pdf")
 public class PDFController {
 

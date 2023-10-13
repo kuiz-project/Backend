@@ -17,7 +17,6 @@ import java.util.Map;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequestMapping("/api/folder")
 public class FolderController {
     @Autowired
