@@ -157,4 +157,28 @@ public class TestController {
         return ResponseEntity.ok(test); // OK (200) status is sent along with the test data.
     }
 
+    @GetMapping("/my-tests")
+    public ResponseEntity<?> myTests(HttpSession session) {
+//        Integer user_code = (Integer) session.getAttribute("user");
+//        if (user_code == null) {
+//            Map<String, String> responseMessage = new HashMap<>();
+//            responseMessage.put("error", "로그인하지 않았습니다.");
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseMessage);
+//        }
+
+        List<MytestDto> tests = new ArrayList<>();
+        for(int i=0;i<5;i++){
+            MytestDto mytestDto = new MytestDto();
+            mytestDto.setTest_id(i);
+            mytestDto.setTest_name("test"+(i+1));
+            mytestDto.setDate("2023.10."+(i+10));
+            mytestDto.setSubject("과목"+(i+1));
+            mytestDto.setFile_name("파일"+(i+1));
+            mytestDto.setPage(i+15);
+            tests.add(mytestDto);
+        }
+
+        return ResponseEntity.ok(tests);
+    }
+
 }
