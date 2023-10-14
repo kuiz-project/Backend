@@ -51,7 +51,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session) {
+    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session, HttpServletResponse httpResponse) {
         Optional<User> optionalUser = userRepository.findByIdentifier(dto.getId());
         Map<String, Object> response = new HashMap<>();
 
@@ -60,6 +60,13 @@ public class UserService {
             if (user.getPassword().equals(dto.getPassword())) {
                 session.setAttribute("user", user.getUser_code());
                 response.put("name", user.getName());
+
+                // 쿠키 설정 예제. 적절히 설정이 필요합니다.
+                Cookie cookie = new Cookie("JSESSIONID", session.getId()); // 세션 ID를 쿠키에 저장
+                cookie.setPath("/"); // 쿠키의 유효 경로 설정
+                cookie.setHttpOnly(true); // 클라이언트 스크립트에서의 접근 방지
+                cookie.setSecure(false); // HTTP 환경에서도 전송 가능
+                httpResponse.addCookie(cookie);
 
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
