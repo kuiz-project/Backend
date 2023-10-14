@@ -42,6 +42,9 @@ public class PDFController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인하지 않았습니다.");
         }
+        if (file.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일이 첨부되지 않았습니다.");
+        }
 
         return pdfService.uploadPDF(file, subject, folder_id, currentUser);
     }
