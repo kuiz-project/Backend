@@ -67,7 +67,8 @@ public class UserService {
                 cookie.setHttpOnly(true); // 클라이언트 스크립트에서의 접근 방지
                 cookie.setSecure(false); // HTTP 환경에서도 전송 가능
                 httpResponse.addCookie(cookie);
-
+                String cookieHeader = String.format("%s; %s", cookie.toString(), "SameSite=None");
+                httpResponse.setHeader("Set-Cookie", cookieHeader);
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
         }
