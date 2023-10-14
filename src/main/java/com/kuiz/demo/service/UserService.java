@@ -71,7 +71,7 @@ public class UserService {
                 httpResponse.setHeader("Set-Cookie", null);
                 for (String header : cookiesHeaders) {
                     // SameSite=None 설정 시 Secure flag 도 활성화 되어야 함
-                    httpResponse.addHeader("Set-Cookie", header + "; SameSite=None; Secure");
+                    httpResponse.addHeader("Set-Cookie", header + "; SameSite=None; ");
                 }
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
