@@ -53,17 +53,18 @@ public class PDFService {
         Folder targetfolder = tempfolder.get();
 
         // 먼저 PDF 정보를 데이터베이스에 저장
-        PDF pdf = PDF.builder()
-                .file_name(multipartFile.getOriginalFilename())
-                .subject(subject)
-                .folder(targetfolder)
-                .user(currentUser)
-                .build();
-        PDF savedPdf = pdfRepository.save(pdf);
+
 
         String fileUrl = "";
         File tempFile = null;
         try {
+            PDF pdf = PDF.builder()
+                    .file_name(multipartFile.getOriginalFilename())
+                    .subject(subject)
+                    .folder(targetfolder)
+                    .user(currentUser)
+                    .build();
+            PDF savedPdf = pdfRepository.save(pdf);
             fileUrl = s3Uploader.uploadFileToS3(multipartFile, user_code);
 
             savedPdf.setFile_url(fileUrl);
