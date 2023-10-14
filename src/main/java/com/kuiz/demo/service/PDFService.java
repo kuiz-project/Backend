@@ -8,12 +8,11 @@ import com.kuiz.demo.model.*;
 import com.kuiz.demo.repository.FolderRepository;
 import com.kuiz.demo.repository.PDFRepository;
 import com.kuiz.demo.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,7 @@ public class PDFService {
     private S3Uploader s3Uploader;
 
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> uploadPDF(MultipartFile multipartFile, Subject subject,Integer folder_id, Integer user_code) {
         Optional<User> tempUser = findUser(user_code);
         if (tempUser.isEmpty()){
