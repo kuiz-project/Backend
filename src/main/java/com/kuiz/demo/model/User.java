@@ -38,13 +38,13 @@ public class User {
     private String email;
 
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy="user", cascade = CascadeType.REMOVE)
     private List<Folder> folders;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy="user", cascade = CascadeType.REMOVE)
     private List<Test> tests;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy="user" , cascade = CascadeType.REMOVE)
     private List<PDF> pdfs;
 
 }

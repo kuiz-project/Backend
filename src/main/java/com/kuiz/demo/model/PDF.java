@@ -43,6 +43,6 @@ public class PDF {
     @JoinColumn(name="user_code", referencedColumnName="user_code", nullable = false)
     private User user;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="pdf")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy="pdf", cascade = CascadeType.REMOVE)
     private List<Test> tests;
 }

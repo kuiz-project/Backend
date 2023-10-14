@@ -23,7 +23,7 @@ public class Folder {
     @Column(nullable = false)
     private String folder_name;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="folder")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy="folder", cascade = CascadeType.REMOVE)
     private List<PDF> pdfs;
 
     @ManyToOne(fetch = FetchType.LAZY) //Many = Folder, One = User
