@@ -94,14 +94,11 @@ public class TestController {
             questionDto.setChoices(Arrays.asList("Choice 1", "Choice 2", "Choice 3", "Choice 4"));
             questionDto.setUser_answer(null);
             questionDtos.add(questionDto);
-        }
 
-        for (int i = 0; i < 2; i++) {
-            QuestionDto questionDto = new QuestionDto();
-            questionDto.setType("multiple_choices");
-            questionDto.setQuestion("Question MP" + (i + 1) + "?");
+            questionDto.setType("N_multiple_choices");
+            questionDto.setQuestion("Question NMP" + (i + 1) + "?");
             questionDto.setChoices(null);
-            questionDto.setChoices(null);
+            questionDto.setUser_answer(null);
             questionDtos.add(questionDto);
         }
 
@@ -131,11 +128,8 @@ public class TestController {
                 questionWithAnswerDto.setCorrect(false);
             }
             questionWithAnswerDtos.add(questionWithAnswerDto);
-        }
 
-        for (int i = 0; i < 2; i++) {
-            QuestionWithAnswerDto questionWithAnswerDto = new QuestionWithAnswerDto();
-            questionWithAnswerDto.setType("multiple_choices");
+            questionWithAnswerDto.setType("N_multiple_choices");
             questionWithAnswerDto.setQuestion("Question MP" + (i + 1) + "?");
             questionWithAnswerDto.setAnswer("Answer");
             questionWithAnswerDto.setUser_answer("User Answer");
