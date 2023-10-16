@@ -11,6 +11,8 @@ import com.kuiz.demo.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,17 +51,28 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session) {
+    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session, HttpServletResponse response) {
         Optional<User> optionalUser = userRepository.findByIdentifier(dto.getId());
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> responseData = new HashMap<>();
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             if (user.getPassword().equals(dto.getPassword())) {
                 session.setAttribute("user", user.getUser_code());
-                response.put("name", user.getName());
+                responseData.put("name", user.getName());
 
-                return new ResponseEntity<>(response, HttpStatus.OK);
+                // 쿠키 설정
+                Cookie sessionCookie = new Cookie("JSESSIONID", session.getId());
+                sessionCookie.setPath("/");  // 쿠키의 유효 경로 설정
+                sessionCookie.setHttpOnly(true);  // JavaScript를 통한 접근 방지
+                sessionCookie.setSecure(true);  // HTTPS에서만 전송
+                response.addCookie(sessionCookie);  // 응답에 쿠키 추가
+
+                // SameSite 속성 추가
+                String newHeader = String.format("%s; SameSite=None", response.getHeader("Set-Cookie"));
+                response.setHeader("Set-Cookie", newHeader);
+
+                return new ResponseEntity<>(responseData, HttpStatus.OK);
             }
         }
         throw new SomethingException("존재하지 않는 사용자이거나 비밀번호가 틀립니다.");
