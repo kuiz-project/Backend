@@ -43,7 +43,7 @@ cloud:
       secret-key: tP3FbQaz/zJs4FzHYwd2XryFDsEA0Cu6kK/CK0tj
 
 server:
-  port: 8080
+  port: 8443
   ssl:
     key-store: file:/home/ubuntu/certi/key-store.p12
     key-store-type: PKCS12
