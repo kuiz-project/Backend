@@ -38,7 +38,7 @@ public class UserService {
                 .build();
         userRepository.save(user);
         Folder folder = Folder.builder()
-                .folder_name("default")
+                .folder_name("빈폴더")
                 .user(user)
                 .build();
         folderRepository.save(folder);

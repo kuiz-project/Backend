@@ -95,11 +95,12 @@ public class TestController {
             questionDto.setUser_answer(null);
             questionDtos.add(questionDto);
 
-            questionDto.setType("N_multiple_choices");
-            questionDto.setQuestion("Question NMP" + (i + 1) + "?");
-            questionDto.setChoices(null);
-            questionDto.setUser_answer(null);
-            questionDtos.add(questionDto);
+            QuestionDto questionDto1 = new QuestionDto();
+            questionDto1.setType("N_multiple_choices");
+            questionDto1.setQuestion("Question NMP" + (i + 1) + "?");
+            questionDto1.setChoices(null);
+            questionDto1.setUser_answer(null);
+            questionDtos.add(questionDto1);
         }
 
         TestDto test = new TestDto(1);
@@ -129,19 +130,20 @@ public class TestController {
             }
             questionWithAnswerDtos.add(questionWithAnswerDto);
 
-            questionWithAnswerDto.setType("N_multiple_choices");
-            questionWithAnswerDto.setQuestion("Question MP" + (i + 1) + "?");
-            questionWithAnswerDto.setAnswer("Answer");
-            questionWithAnswerDto.setUser_answer("User Answer");
-            questionWithAnswerDto.setExplanation("Explanation");
-            questionWithAnswerDto.setChoices(null);
+            QuestionWithAnswerDto questionWithAnswerDto1 = new QuestionWithAnswerDto();
+            questionWithAnswerDto1.setType("N_multiple_choices");
+            questionWithAnswerDto1.setQuestion("Question MP" + (i + 1) + "?");
+            questionWithAnswerDto1.setAnswer("Answer");
+            questionWithAnswerDto1.setUser_answer("User Answer");
+            questionWithAnswerDto1.setExplanation("Explanation");
+            questionWithAnswerDto1.setChoices(null);
             if (i%2==0){
-                questionWithAnswerDto.setCorrect(true);
+                questionWithAnswerDto1.setCorrect(true);
             }
             else {
-                questionWithAnswerDto.setCorrect(false);
+                questionWithAnswerDto1.setCorrect(false);
             }
-            questionWithAnswerDtos.add(questionWithAnswerDto);
+            questionWithAnswerDtos.add(questionWithAnswerDto1);
         }
 
         TestWithAnswerDto test = new TestWithAnswerDto(1);
