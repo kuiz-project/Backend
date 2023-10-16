@@ -76,35 +76,35 @@ public class PDFService {
                 throw new RuntimeException(e);
             }
 
-//            //keyword 추출하는 작업 추가
-//
-//            CreateKeywordsDto createKeywordsDto = new CreateKeywordsDto();
-//            createKeywordsDto.setPdf_url(tempFile.getAbsolutePath());
-//            createKeywordsDto.setSubject(subject);
-//
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            String jsonString;
-//            try {
-//                jsonString = objectMapper.writeValueAsString(createKeywordsDto);
-//            } catch (Exception e) {
-//                throw new RuntimeException("Error serializing createQuestionDto", e);
-//            }
-//
-//            String pythonPath = "/home/ubuntu/python/get_keyword.py";
-//
-//            String pythonOutput = executePythonScript(pythonPath, jsonString);
-//
-//            Map<String, List<String>> tempResult;
-//            try {
-//                tempResult = objectMapper.readValue(pythonOutput, new TypeReference<Map<String, List<String>>>() {});
-//            } catch (Exception e) {
-//                throw new RuntimeException("파이썬 키워드 추출 후 error",e);
-//            }
-//
-//            Keywords keywords = new Keywords();
-//            keywords.setPageKeywords(tempResult);
-//
-//            savedPdf.setKeywords(keywords);
+            //keyword 추출하는 작업 추가
+
+            CreateKeywordsDto createKeywordsDto = new CreateKeywordsDto();
+            createKeywordsDto.setPdf_url(tempFile.getAbsolutePath());
+            createKeywordsDto.setSubject(subject);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonString;
+            try {
+                jsonString = objectMapper.writeValueAsString(createKeywordsDto);
+            } catch (Exception e) {
+                throw new RuntimeException("Error serializing createQuestionDto", e);
+            }
+
+            String pythonPath = "/home/ubuntu/python/get_keyword.py";
+
+            String pythonOutput = executePythonScript(pythonPath, jsonString);
+
+            Map<String, List<String>> tempResult;
+            try {
+                tempResult = objectMapper.readValue(pythonOutput, new TypeReference<Map<String, List<String>>>() {});
+            } catch (Exception e) {
+                throw new RuntimeException("파이썬 키워드 추출 후 error",e);
+            }
+
+            Keywords keywords = new Keywords();
+            keywords.setPageKeywords(tempResult);
+
+            savedPdf.setKeywords(keywords);
             pdfRepository.save(savedPdf);
 
             // 파이썬 스크립트 실행 후 임시 파일 삭제

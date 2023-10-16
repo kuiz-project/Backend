@@ -49,7 +49,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session, HttpServletResponse httpResponse) {
+    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session) {
         Optional<User> optionalUser = userRepository.findByIdentifier(dto.getId());
         Map<String, Object> response = new HashMap<>();
 
@@ -59,24 +59,9 @@ public class UserService {
                 session.setAttribute("user", user.getUser_code());
                 response.put("name", user.getName());
 
-                // 쿠키 설정 예제. 적절히 설정이 필요합니다.
-                Cookie cookie = new Cookie("JSESSIONID", session.getId());
-                cookie.setPath("/");
-                cookie.setHttpOnly(true);
-                cookie.setSecure(false);
-                httpResponse.addCookie(cookie);
-
-                // 기존의 "Set-Cookie" 헤더를 모두 가져와서 새로운 "Set-Cookie" 헤더로 설정합니다.
-                Collection<String> cookiesHeaders = httpResponse.getHeaders("Set-Cookie");
-                httpResponse.setHeader("Set-Cookie", null);
-                for (String header : cookiesHeaders) {
-                    // SameSite=None 설정 시 Secure flag 도 활성화 되어야 함
-                    httpResponse.addHeader("Set-Cookie", header + "; SameSite=None; ");
-                }
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
         }
-
         throw new SomethingException("존재하지 않는 사용자이거나 비밀번호가 틀립니다.");
     }
 
