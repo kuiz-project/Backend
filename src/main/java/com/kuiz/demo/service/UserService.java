@@ -51,30 +51,34 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session, HttpServletResponse response) {
+    public ResponseEntity<?> login(LoginRequestDto dto, HttpSession session, HttpServletResponse httpResponse) {
         Optional<User> optionalUser = userRepository.findByIdentifier(dto.getId());
-        Map<String, Object> responseData = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             if (user.getPassword().equals(dto.getPassword())) {
                 session.setAttribute("user", user.getUser_code());
-                responseData.put("name", user.getName());
+                response.put("name", user.getName());
 
-                // 쿠키 설정
-                Cookie sessionCookie = new Cookie("JSESSIONID", session.getId());
-                sessionCookie.setPath("/");  // 쿠키의 유효 경로 설정
-                sessionCookie.setHttpOnly(true);  // JavaScript를 통한 접근 방지
-                sessionCookie.setSecure(true);  // HTTPS에서만 전송
-                response.addCookie(sessionCookie);  // 응답에 쿠키 추가
+                // 쿠키 설정 예제. 적절히 설정이 필요합니다.
+                Cookie cookie = new Cookie("JSESSIONID", session.getId());
+                cookie.setPath("/");
+                cookie.setHttpOnly(true);
+                cookie.setSecure(true);
+                httpResponse.addCookie(cookie);
 
-                // SameSite 속성 추가
-                String newHeader = String.format("%s; SameSite=None", response.getHeader("Set-Cookie"));
-                response.setHeader("Set-Cookie", newHeader);
-
-                return new ResponseEntity<>(responseData, HttpStatus.OK);
+                // 기존의 "Set-Cookie" 헤더를 모두 가져와서 새로운 "Set-Cookie" 헤더로 설정합니다.
+                Collection<String> cookiesHeaders = httpResponse.getHeaders("Set-Cookie");
+                httpResponse.setHeader("Set-Cookie", null);
+                for (String header : cookiesHeaders) {
+                    // SameSite=None 설정 시 Secure flag 도 활성화 되어야 함
+                    httpResponse.addHeader("Set-Cookie", header + "; SameSite=None; ");
+                }
+                return new ResponseEntity<>(response, HttpStatus.OK);
             }
         }
+
         throw new SomethingException("존재하지 않는 사용자이거나 비밀번호가 틀립니다.");
     }
 
