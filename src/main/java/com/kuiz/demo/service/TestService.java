@@ -4,20 +4,18 @@ package com.kuiz.demo.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kuiz.demo.Dto.*;
 import com.kuiz.demo.exception.SomethingException;
-import com.kuiz.demo.model.PDF;
+import com.kuiz.demo.model.*;
 
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
-import com.kuiz.demo.model.QuestionData;
-import com.kuiz.demo.model.Test;
-import com.kuiz.demo.model.User;
 import com.kuiz.demo.repository.*;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -148,6 +146,83 @@ public class TestService {
         return ResponseEntity.ok(testDto);
     }
 
+    @Transactional
+    public ResponseEntity<?> scoreTest(TestDto testDto, Integer user_code){
+        Optional<User> tempUser = findUser(user_code);
+        Optional<Test> tempTest = testRepository.findById(testDto.getTest_id());
+        if (!tempUser.isPresent() || !tempTest.isPresent()){
+            throw new SomethingException("잘못된 접근입니다.");
+        }
+        User currentUser = tempUser.get();
+        Test currentTest = tempTest.get();
+        if (!currentTest.getUser().getUser_code().equals(currentUser.getUser_code())){
+            throw new SomethingException("잘못된 접근입니다.");
+        }
+        List<Question> questions = currentTest.getQuestionData().getQuestions();
+        List<QuestionDto> questionDtos = testDto.getQuestions();
+        List<ScoreQuestionDto> scoreQuestionDtoList = null;
+        for(int i = 0; i < questions.size(); i++) {
+            Question currentQuestion = questions.get(i);
+            QuestionDto currentDto = questionDtos.get(i);
+
+            currentQuestion.setUser_answer(currentDto.getUser_answer());
+            if(currentQuestion.getType().equals("N_multiple_choices")&&currentQuestion.getAnswer().equals(currentDto.getUser_answer())){
+                currentQuestion.setCorrect(true);
+            }
+            else {
+                currentQuestion.setCorrect(false);
+                ScoreQuestionDto tempScore = convertToScoreQuestionDto(currentQuestion);
+                tempScore.setSequence(i);
+                scoreQuestionDtoList.add(tempScore);
+            }
+
+        }
+        if (!scoreQuestionDtoList.isEmpty()) {
+            ScoreTestDto scoreTestDto = new ScoreTestDto();
+            scoreTestDto.setQuestions(scoreQuestionDtoList);
+
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonString;
+            try {
+                jsonString = objectMapper.writeValueAsString(scoreTestDto);
+            } catch (Exception e) {
+                throw new RuntimeException("Error serializing createQuestionDto", e);
+            }
+            //파이썬 코드 실행
+            String pythonPath = "/home/ubuntu/python/score_test.py";
+
+            String pythonOutput = executePythonScript(pythonPath, jsonString);
+            ScoreTestListResponse scoreTestListResponse;
+            try {
+                scoreTestListResponse = objectMapper.readValue(pythonOutput, ScoreTestListResponse.class);
+            } catch (Exception e) {
+                throw new RuntimeException("파이썬코드 실행 이후 역직렬화 error", e);
+            }
+
+            //주관식 정답 수정
+            for (int i=0;i<scoreTestListResponse.getQuestions().size();i++ ){
+                ScoreTestRequestDto testRequestDto = scoreTestListResponse.getQuestions().get(i);
+                Question currentQuestion = questions.get(testRequestDto.getSequence()); //원래 DB가져오기
+                currentQuestion.setCorrect(testRequestDto.isCorrect()); //수정
+            }
+
+        }
+        Map<String, String> responseMessage = new HashMap<>();
+        responseMessage.put("message", "채점 완료");
+        return new ResponseEntity<>(responseMessage, HttpStatus.OK);
+    }
+
+    public ScoreQuestionDto convertToScoreQuestionDto(Question questionWithAnswerDto) {
+        ScoreQuestionDto scoreQuestionDto = new ScoreQuestionDto();
+
+        scoreQuestionDto.setQuestion(questionWithAnswerDto.getQuestion());
+        scoreQuestionDto.setAnswer(questionWithAnswerDto.getAnswer());
+        scoreQuestionDto.setUser_answer(questionWithAnswerDto.getUser_answer());
+        // 다른 필드들 (answer, explanation, correct)는 초기화 되지 않았으므로 필요한 경우 적절한 값으로 설정하십시오.
+
+        return scoreQuestionDto;
+    }
     public Optional<User> findUser(Integer user_code) {
         return userRepository.findById(user_code);
     }

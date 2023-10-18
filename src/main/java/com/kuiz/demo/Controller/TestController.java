@@ -178,4 +178,19 @@ public class TestController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/scoretest")
+    public ResponseEntity<?> scoreTest(@RequestBody TestDto testDto, HttpSession httpSession) {
+        Integer user_code = (Integer) httpSession.getAttribute("user");
+        Map<String, String> responseMessage = new HashMap<>();
+        if (user_code == null) {
+            responseMessage.put("error", "로그인하지 않았습니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseMessage);
+        }
+        if (testDto.getQuestions().isEmpty()){
+            responseMessage.put("error", "요청이 올바르지 않습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseMessage);
+        }
+        return testService.scoreTest(testDto,user_code);
+    }
+
 }
