@@ -45,7 +45,15 @@ cloud:
 server:
   port: 8443
   ssl:
-    key-store: file:/home/ubuntu/certi/key-store.p12
+    key-store: classpath:certificates/key-store.p12
     key-store-type: PKCS12
     key-store-password: andy8429!
     key-alias: tomcat
+
+logging:
+  level:
+    root: WARN
+  file:
+    name: logs/app.log
+    max-history: 10
+    max-size: 10MB
