@@ -8,7 +8,8 @@ public class MytestDto {
 
     private String folder_name;
     private String subject;
-    private String test_name;
+    private String file_name;
     private Integer page;
     private String date;
+    private String score;
 }
