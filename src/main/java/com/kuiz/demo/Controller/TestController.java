@@ -128,6 +128,8 @@ public class TestController {
             else {
                 questionWithAnswerDto.setCorrect(false);
             }
+            if (testId==2)
+                questionWithAnswerDto.setCorrect(false);
             questionWithAnswerDtos.add(questionWithAnswerDto);
 
             QuestionWithAnswerDto questionWithAnswerDto1 = new QuestionWithAnswerDto();
@@ -143,6 +145,8 @@ public class TestController {
             else {
                 questionWithAnswerDto1.setCorrect(false);
             }
+            if (testId==2)
+                questionWithAnswerDto1.setCorrect(true);
             questionWithAnswerDtos.add(questionWithAnswerDto1);
         }
 
