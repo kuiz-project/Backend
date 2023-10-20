@@ -70,9 +70,10 @@ public class TestService {
         try {
             questionData = objectMapper.readValue(pythonOutput, QuestionData.class);
             questionData.getQuestions().stream().map(temp->{
-                if (temp.getType() !="multiple_choices"){
+                if (temp.getChoices().isEmpty()){
                     temp.setType("N_multiple_choices");
                 }
+                else temp.setType("multiple_choices");
                 return temp;
             }).collect(Collectors.toList());
         } catch (Exception e) {
@@ -141,7 +142,8 @@ public class TestService {
                 .map(question -> modelMapper.map(question, QuestionDto.class))
                 .collect(Collectors.toList());
 
-        TestDto testDto = new TestDto(testId);
+        TestDto testDto = new TestDto();
+        testDto.setTest_id(testId);
         testDto.setQuestions(questionDto);
 
         return ResponseEntity.ok(testDto);
