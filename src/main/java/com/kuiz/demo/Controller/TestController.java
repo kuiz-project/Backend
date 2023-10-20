@@ -177,7 +177,7 @@ public class TestController {
             mytestDto.setTest_id(i);
             mytestDto.setFile_name("file"+(i+1));
             mytestDto.setDate("2023.10."+(i+10));
-            mytestDto.setSubject(Subject.MATH);
+            mytestDto.setSubject(Subject.C_PROGRAMMING);
             mytestDto.setFolder_name("경로"+(i+1));
             mytestDto.setPage(i+15);
             mytestDto.setScore((i+2)+"/"+(i+4));
