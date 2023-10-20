@@ -20,10 +20,10 @@ public class Test {
     private Integer test_id;
 
     @Column
-    private Integer score;
+    private String score;
 
     @Column (nullable = false)
-    private String test_name;
+    private Integer page;
 
     @Column (nullable = false)
     private Integer multiple_choices;

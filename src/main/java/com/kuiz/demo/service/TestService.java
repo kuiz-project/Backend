@@ -9,6 +9,7 @@ import com.kuiz.demo.model.*;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.kuiz.demo.repository.*;
@@ -18,12 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class TestService {
@@ -79,13 +74,13 @@ public class TestService {
         }
 
         Test test = Test.builder()
-                .test_name(currentPDF.getFile_name())
+                .page(createTestRequireDto.getPage())
                 .multiple_choices(createTestRequireDto.getMultiple_choices())
                 .N_multiple_choices(createTestRequireDto.getN_multiple_choices())
+                .date(getCurrentLocalTimeAsString())
                 .questionData(questionData)
                 .user(currentUser)
                 .pdf(currentPDF)
-                .date(getCurrentLocalTimeAsString())
                 .build();
 
          Test savedTest = testRepository.save(test);
@@ -147,6 +142,32 @@ public class TestService {
     }
 
     @Transactional
+    public ResponseEntity<?> getmytests(Integer user_code){
+        Optional<User> tempUser = findUser(user_code);
+        if (!tempUser.isPresent()){
+            throw new SomethingException("잘못된 접근입니다.");
+        }
+        User currentUser = tempUser.get();
+
+        List<MytestDto> tests = currentUser.getTests().stream().map(temp -> {
+            PDF pdf = temp.getPdf();
+            Folder folder = pdf.getFolder();
+            MytestDto mytestDto = new MytestDto();
+            mytestDto.setTest_id(temp.getTest_id());
+            mytestDto.setSubject(pdf.getSubject());
+            mytestDto.setFile_name(pdf.getFile_name());
+            mytestDto.setFolder_name(folder.getFolder_name());
+            mytestDto.setPage(temp.getPage());
+            mytestDto.setDate(temp.getDate());
+            mytestDto.setScore(temp.getScore());
+            return mytestDto;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response =new HashMap<>();
+        response.put("tests",tests);
+        return ResponseEntity.ok(tests);
+    }
+    @Transactional
     public ResponseEntity<?> scoreTest(TestDto testDto, Integer user_code){
         Optional<User> tempUser = findUser(user_code);
         Optional<Test> tempTest = testRepository.findById(testDto.getTest_id());
@@ -161,6 +182,7 @@ public class TestService {
         List<Question> questions = currentTest.getQuestionData().getQuestions();
         List<QuestionDto> questionDtos = testDto.getQuestions();
         List<ScoreQuestionDto> scoreQuestionDtoList = null;
+        Integer correct = 0;
         for(int i = 0; i < questions.size(); i++) {
             Question currentQuestion = questions.get(i);
             QuestionDto currentDto = questionDtos.get(i);
@@ -168,6 +190,7 @@ public class TestService {
             currentQuestion.setUser_answer(currentDto.getUser_answer());
             if(currentQuestion.getType().equals("N_multiple_choices")&&currentQuestion.getAnswer().equals(currentDto.getUser_answer())){
                 currentQuestion.setCorrect(true);
+                correct=correct+1;
             }
             else {
                 currentQuestion.setCorrect(false);
@@ -190,7 +213,7 @@ public class TestService {
                 throw new RuntimeException("Error serializing createQuestionDto", e);
             }
             //파이썬 코드 실행
-            String pythonPath = "/home/ubuntu/python/score_test.py";
+            String pythonPath = "/home/ubuntu/python/get_score.py";
 
             String pythonOutput = executePythonScript(pythonPath, jsonString);
             ScoreTestListResponse scoreTestListResponse;
@@ -205,8 +228,10 @@ public class TestService {
                 ScoreTestRequestDto testRequestDto = scoreTestListResponse.getQuestions().get(i);
                 Question currentQuestion = questions.get(testRequestDto.getSequence()); //원래 DB가져오기
                 currentQuestion.setCorrect(testRequestDto.isCorrect()); //수정
+                if (testRequestDto.isCorrect()) correct = correct+1;
             }
 
+            currentTest.setScore(correct+"/"+(currentTest.getMultiple_choices()+currentTest.getN_multiple_choices()));
         }
         Map<String, String> responseMessage = new HashMap<>();
         responseMessage.put("message", "채점 완료");
