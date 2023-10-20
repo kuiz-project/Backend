@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CorsConfig implements WebMvcConfigurer {
 
     // ALLOWED_METHOD_NAMES를 정의하세요.
-    private static final String ALLOWED_METHOD_NAMES = "GET,POST,PUT,DELETE";
+    private static final String ALLOWED_METHOD_NAMES = "GET,POST,PUT,DELETE,PATCH";
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
