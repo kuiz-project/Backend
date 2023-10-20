@@ -189,7 +189,7 @@ public class TestService {
         }
         List<Question> questions = currentTest.getQuestionData().getQuestions();
         List<QuestionDto> questionDtos = testDto.getQuestions();
-        List<ScoreQuestionDto> scoreQuestionDtoList = null;
+        List<ScoreQuestionDto> scoreQuestionDtoList = new ArrayList<>();
         Integer correct = 0;
         for(int i = 0; i < questions.size(); i++) {
             Question currentQuestion = questions.get(i);
