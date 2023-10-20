@@ -70,7 +70,7 @@ public class TestService {
         try {
             questionData = objectMapper.readValue(pythonOutput, QuestionData.class);
             questionData.getQuestions().stream().map(temp->{
-                if (temp.getChoices().isEmpty()){
+                if (temp.getChoices()==null){
                     temp.setType("N_multiple_choices");
                 }
                 else temp.setType("multiple_choices");
