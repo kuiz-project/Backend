@@ -69,13 +69,6 @@ public class TestService {
         QuestionData questionData;
         try {
             questionData = objectMapper.readValue(pythonOutput, QuestionData.class);
-            questionData.getQuestions().stream().map(temp->{
-                if (temp.getChoices()==null){
-                    temp.setType("N_multiple_choices");
-                }
-                else temp.setType("multiple_choices");
-                return temp;
-            }).collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("파이썬코드 실행 이후 역직렬화 error",e);
         }
