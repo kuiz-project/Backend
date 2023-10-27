@@ -63,9 +63,10 @@ public class TestService {
         }
 
         //파이썬 코드 실행 (인자는 keywordarray, 객관식, 주관식 갯수,subject)
-        String pythonPath = "/home/ubuntu/python/get_test.py";
+        String pythonPath = "/home/master/python/get_test.py";
 
         String pythonOutput = executePythonScript(pythonPath, jsonString);
+        System.out.println("pythonOutput :"+pythonOutput );
         QuestionData questionData;
         try {
             questionData = objectMapper.readValue(pythonOutput, QuestionData.class);
@@ -85,6 +86,7 @@ public class TestService {
 
          Test savedTest = testRepository.save(test);
 
+        System.out.println("after serializing:"+questionData);
         return getTest(savedTest.getTest_id(), user_code);
     }
 
@@ -214,7 +216,7 @@ public class TestService {
                 throw new RuntimeException("Error serializing createQuestionDto", e);
             }
             //파이썬 코드 실행
-            String pythonPath = "/home/ubuntu/python/get_score.py";
+            String pythonPath = "/home/master/python/get_score.py";
 
             String pythonOutput = executePythonScript(pythonPath, jsonString);
             ScoreTestListResponse scoreTestListResponse;
