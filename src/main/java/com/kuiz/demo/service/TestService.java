@@ -66,7 +66,12 @@ public class TestService {
         String pythonPath = "/home/master/python/get_test.py";
 
         String pythonOutput = executePythonScript(pythonPath, jsonString);
+        System.out.println("jsonString :"+jsonString );
+        System.out.println("================================================");
+
         System.out.println("pythonOutput :"+pythonOutput );
+        System.out.println("================================================");
+
         QuestionData questionData;
         try {
             questionData = objectMapper.readValue(pythonOutput, QuestionData.class);
