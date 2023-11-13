@@ -196,22 +196,22 @@ public class TestService {
             QuestionDto currentDto = questionDtos.get(i);
 
             currentQuestion.setUser_answer(currentDto.getUser_answer());
-            if(currentQuestion.getType().equals("N_multiple_choices")&&currentQuestion.getAnswer().equals(currentDto.getUser_answer())){
+            if(currentQuestion.getAnswer().equals(currentDto.getUser_answer())){
                 currentQuestion.setCorrect(true);
                 correct=correct+1;
             }
             else {
                 currentQuestion.setCorrect(false);
-                ScoreQuestionDto tempScore = convertToScoreQuestionDto(currentQuestion);
-                tempScore.setSequence(i);
-                scoreQuestionDtoList.add(tempScore);
+                if (currentQuestion.getType().equals("N_multiple_choices")){
+                    ScoreQuestionDto tempScore = convertToScoreQuestionDto(currentQuestion);
+                    tempScore.setSequence(i);
+                    scoreQuestionDtoList.add(tempScore);
+                }
             }
-
         }
         if (!scoreQuestionDtoList.isEmpty()) {
             ScoreTestDto scoreTestDto = new ScoreTestDto();
             scoreTestDto.setQuestions(scoreQuestionDtoList);
-
 
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonString;
