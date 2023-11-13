@@ -1,7 +1,6 @@
 package com.kuiz.demo.model;
 
 public enum Subject {
-    multimedia,
     C_PROGRAMMING,
     PYTHON,
     C_PLUS_PLUS,
@@ -43,5 +42,6 @@ public enum Subject {
     COMPUTER_SIMULATION,
     SOFTWARE_QUALITY_ASSURANCE,
     COMPUTER_FORENSICS,
-    BIOINFORMATICS
+    BIOINFORMATICS,
+    multimedia
 }
