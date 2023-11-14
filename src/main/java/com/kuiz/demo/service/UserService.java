@@ -59,6 +59,7 @@ public class UserService {
             User user = optionalUser.get();
             if (user.getPassword().equals(dto.getPassword())) {
                 session.setAttribute("user", user.getUser_code());
+                session.setMaxInactiveInterval(3600*5);
                 response.put("name", user.getName());
 
                 // 쿠키 설정 예제. 적절히 설정이 필요합니다.
