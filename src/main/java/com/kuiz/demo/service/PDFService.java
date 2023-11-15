@@ -111,6 +111,8 @@ public class PDFService {
             if(tempFile.exists()) {
                 tempFile.delete();
             }
+            System.out.println("pdf 과목 : "+pdf.getSubject()+"\n+추출 keyword:"+keywords.getPageKeywords());
+
 
             PdfDto pdfDto = new PdfDto(savedPdf);
 
